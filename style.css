@@ -1,21 +1,30 @@
 body {
     margin: 2.5%;
     margin-top: 0;
+    margin-bottom: 0;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    background-color: rgb(255, 226, 188);
 }
 
 #top-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    height: 10vh;
+}
+
+h1 {
+    font-size: 1.2em;
+    margin: 10px;
 }
 
 .grid {
     display: grid;
     aspect-ratio: 1;
     height: 75vh;
-    margin: auto;
-    border: 10px solid rgb(97, 85, 7);
-    border-radius: 2.5%;
+    margin-left: auto;
+    margin-right: auto;
+    border: 10px solid black;
 }
 
 .s-grid {
@@ -45,4 +54,38 @@ body {
 
 .dark {
     background-color: rgb(72, 163, 72);
+}
+
+#footer {
+    margin-top: 10px;
+    height: 10vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#footer button {
+    margin: 10px;
+    margin-bottom: none;
+    padding: 10px;
+    border: 0.2em solid black;
+    border-radius: 10px;
+    font-weight: 700;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    background-color: rgb(169, 254, 169);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, .18);
+}
+
+#footer button:hover {
+    cursor: pointer;
+    transition: top ease 0.5s;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .3);
+    background-color: rgb(72, 163, 72);
+    color: white;
+}
+
+#footer button:active {
+    cursor: pointer;
+    transform: translateY(2px);
 }
