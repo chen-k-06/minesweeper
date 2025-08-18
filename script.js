@@ -1,9 +1,15 @@
 let grid_size = 10;
 let grid = document.querySelector('.grid');
+let boxes;
 const sizeToggle = document.getElementById("difficulty");
 const SMALL = 10;
 const MED = 15;
 const LARGE = 23;
+const bombCounts = {
+    SMALL: 10,
+    MED: 17,
+    LARGE: 20
+}
 
 document.addEventListener("DOMContentLoaded", function () {
     generateGrid(SMALL);
@@ -46,6 +52,23 @@ function generateGrid(SIDE_LENGTH) {
             grid.appendChild(box);
         }
     }
+
+    // to-do: add bomb generation 
+
+
+    boxes = document.querySelectorAll('.box');
+
+    boxes.forEach(box => {
+        box.addEventListener("click", function (event) {
+            console.log("Adding box event handlers.");
+            if (box.classList.contains("bomb")) {
+                endGame(false);
+            }
+            if (!box.classList.contains("dug")) {
+                box.classList.add("dug");
+            }
+        })
+    });
 }
 
 function changeGridSize(SIDE_LENGTH) {
@@ -64,5 +87,14 @@ function changeGridSize(SIDE_LENGTH) {
     }
     else {
         console.log("Passed invalid grid size to changeGridSize()");
+    }
+}
+
+function endGame(won) {
+    if (won) {
+        console.log("User won the game!");
+    }
+    else {
+        console.log("Game over. User lost.");
     }
 }
