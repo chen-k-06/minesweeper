@@ -8,7 +8,7 @@ const SMALL = 10;
 const MED = 15;
 const LARGE = 23;
 const bombCounts = {
-    SMALL: 25,
+    SMALL: 18,
     MED: 40,
     LARGE: 60
 }
@@ -81,7 +81,7 @@ function generateGrid(SIDE_LENGTH) {
 
                 // eliminate all squares that 1. touch an already dug square and 2. do not contain a 
                 // bfs
-                bfsSquares(index);
+                bfsSquares(index, SIDE_LENGTH);
             }
             else if (box.classList.contains("bomb")) {
                 endGame(false);
@@ -273,9 +273,61 @@ function generateNumbers(SIDE_LENGTH) {
     });
 }
 
-function bfsSquares(idx) {
-    let revealedCount = 0;
+function bfsSquares(inital, SIDE_LENGTH) {
+    let revealed = 0;
     let max = 15;
+    let tiles = document.querySelectorAll(".box");
+    let queue = [];
+    queue.push(inital);
+
+    while (queue.length > 0 && revealed < max) {
+        let index = queue.pop();
+        let row = Math.floor(index / SIDE_LENGTH);
+        let col = index % SIDE_LENGTH;
+
+        tiles[index].classList.add("dug");
+
+        // north
+        if (row > 0 && !tiles[index - SIDE_LENGTH].classList.contains("bomb")) {
+            queue.push(index - SIDE_LENGTH);
+        }
+        // // northeast
+        // if (row > 0 && col + 1 < SIDE_LENGTH && !tiles[index - SIDE_LENGTH + 1].classList.contains("bomb")) {
+        //     queue.push(index - SIDE_LENGTH + 1);
+        // }
+        // east
+        if (col + 1 < SIDE_LENGTH && !tiles[index + 1].classList.contains("bomb")) {
+            queue.push(index + 1);
+        }
+
+        // // southeast
+        // if (row + 1 < SIDE_LENGTH && col + 1 < SIDE_LENGTH && !tiles[index + SIDE_LENGTH + 1].classList.contains("bomb")) {
+        //     queue.push(index + SIDE_LENGTH + 1);
+        // }
+
+        // south
+        if (row + 1 < SIDE_LENGTH && !tiles[index + SIDE_LENGTH].classList.contains("bomb")) {
+            queue.push(index + SIDE_LENGTH);
+        }
+
+        // // southwest
+        // if (row + 1 < SIDE_LENGTH && col - 1 >= 0 && !tiles[index - 1 + SIDE_LENGTH].classList.contains("bomb")) {
+        //     queue.push(index - 1 + SIDE_LENGTH);
+        // }
+
+        // west
+        if (col - 1 >= 0 && !tiles[index - 1].classList.contains("bomb")) {
+            queue.push(index - 1);
+        }
+
+        // // northwest
+        // if (row > 0 && col - 1 >= 0 && !tiles[index - 1 - SIDE_LENGTH].classList.contains("bomb")) {
+        //     queue.push(index - 1 - SIDE_LENGTH);
+        // }
+
+        revealed++;
+    }
+
 }
 
 function checkGameOver() {

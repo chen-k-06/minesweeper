@@ -4,6 +4,8 @@ body {
     margin-bottom: 0;
     font-family: Verdana, Geneva, Tahoma, sans-serif;
     background-color: white;
+    /* margin-left: solid 10px #acd454;
+    margin-right: solid 10px #acd454; */
 }
 
 #top-bar {
@@ -14,6 +16,10 @@ body {
     width: 75vh;
     margin: auto;
     background-color: #4b742c;
+    /* border: 10px solid #4b742c; */
+    border-top: none;
+    border-bottom: none;
+    margin-top: 10px;
 }
 
 h1 {
@@ -23,11 +29,13 @@ h1 {
     color: white;
 }
 
+/* drop down grid select */
 #difficulty {
     padding: 5px;
     margin: 10px;
     border: 3px solid white;
     border-radius: 10px;
+    font-weight: 600;
 }
 
 .grid {
@@ -36,7 +44,9 @@ h1 {
     height: 75vh;
     margin-left: auto;
     margin-right: auto;
-    /* border: 10px solid black; */
+    /* border: 10px solid #acd454; */
+    border-top: none;
+    border-bottom: none;
 }
 
 .s-grid {
@@ -60,7 +70,18 @@ h1 {
     justify-content: center;
     align-items: center;
     font-weight: 900;
+}
+
+.s-grid .box {
     font-size: 140%;
+}
+
+.m-grid .box {
+    font-size: 125%;
+}
+
+.l-grid .box {
+    font-size: 90%;
 }
 
 .light {
@@ -99,15 +120,15 @@ h1 {
     color: #7b1fa2;
 }
 
-.five {}
+.five {
+    color: #ff8f00;
+}
 
 .six {}
 
 .seven {}
 
 .eight {}
-
-.nine {}
 
 #footer {
     margin-top: 10px;
@@ -118,6 +139,9 @@ h1 {
     justify-content: center;
     align-items: center;
     background-color: #4b742c;
+    /* border: 10px solid #4b742c; */
+    border-top: none;
+    border-bottom: none;
 }
 
 #footer button {
