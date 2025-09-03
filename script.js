@@ -8,9 +8,9 @@ const SMALL = 10;
 const MED = 15;
 const LARGE = 23;
 const bombCounts = {
-    SMALL: 10,
-    MED: 17,
-    LARGE: 20
+    SMALL: 25,
+    MED: 40,
+    LARGE: 60
 }
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -72,6 +72,9 @@ function generateGrid(SIDE_LENGTH) {
             }
 
             moveCount++;
+            if (!box.classList.contains("dug")) {
+                box.classList.add("dug");
+            }
             if (moveCount == 1) {
                 generateBombs(SIDE_LENGTH, index); // only generate bombs on the first click
                 // this guarentees that the first click is safe
@@ -84,8 +87,10 @@ function generateGrid(SIDE_LENGTH) {
                 endGame(false);
                 return;
             }
-            if (!box.classList.contains("dug")) {
-                box.classList.add("dug");
+
+            if (checkGameOver()) {
+                endGame(true);
+                return;
             }
         })
     });
@@ -170,59 +175,64 @@ function generateBombs(SIDE_LENGTH, selectedIdx) {
  *
  * For every tile that does not have the `bomb` class, this function counts
  * the bombs in the surrounding 8 neighboring tiles (or fewer on edges/corners),
- * and assigns that count (e.g., via textContent or a data attribute).
+ * and assigns that count (via textContent).
  *
  * @param {number} SIDE_LENGTH - One of the numeric constants `SMALL`, `MED`, or `LARGE`,
  *   representing the current grid size (used to calculate tile positions).
  * @returns {void}
  */
 function generateNumbers(SIDE_LENGTH) {
-    let bombs = document.querySelectorAll('.bomb');
-    let safeTiles = document.querySelectorAll(".box:not(.bomb)");
     let tiles = document.querySelectorAll(".box");
 
-    safeTiles.forEach((box, index) => {
+    tiles.forEach((box, index) => {
+        if (box.classList.contains("bomb")) {
+            return;
+        }
+
         let bombCount = 0;
+        let row = Math.floor(index / SIDE_LENGTH);
+        let col = index % SIDE_LENGTH;
+        console.log(tiles[index - SIDE_LENGTH])
 
         // north
-        if (index - gridSize >= 0 && tiles[index - gridSize].classList.contains('bomb')) {
+        if (row > 0 && tiles[index - SIDE_LENGTH].classList.contains("bomb")) {
             bombCount++;
         }
         // northeast
-        if (index - gridSize + 1 >= 0 && index % gridSize + 1 < gridSize && tiles[index - gridSize + 1].classList.contains('bomb')) {
+        if (row > 0 && col + 1 < SIDE_LENGTH && tiles[index - SIDE_LENGTH + 1].classList.contains("bomb")) {
             bombCount++;
         }
         // east
-        if (index + 1 < gridSize ** 2 && index % gridSize + 1 < gridSize && tiles[index + 1].classList.contains('bomb')) {
+        if (col + 1 < SIDE_LENGTH && tiles[index + 1].classList.contains("bomb")) {
             bombCount++;
         }
 
         // southeast
-        if (index + gridSize + 1 < gridSize ** 2 && index % gridSize + 1 < gridSize && tiles[index + gridSize].classList.contains('bomb')) {
+        if (row + 1 < SIDE_LENGTH && col + 1 < SIDE_LENGTH && tiles[index + SIDE_LENGTH + 1].classList.contains("bomb")) {
             bombCount++;
         }
 
         // south
-        if (index + gridSize < gridSize ** 2 && tiles[index + gridSize].classList.contains('bomb')) {
+        if (row + 1 < SIDE_LENGTH && tiles[index + SIDE_LENGTH].classList.contains("bomb")) {
             bombCount++;
         }
 
         // southwest
-        if (index + gridSize < gridSize ** 2 && index - 1 > 0 && tiles[index + gridSize - 1].classList.contains('bomb')) {
+        if (row + 1 < SIDE_LENGTH && col - 1 >= 0 && tiles[index - 1 + SIDE_LENGTH].classList.contains("bomb")) {
             bombCount++;
         }
 
         // west
-        if (index - 1 > 0 && index % gridSize - 1 > 0 && tiles[index - 1].classList.contains('bomb')) {
+        if (col - 1 >= 0 && tiles[index - 1].classList.contains("bomb")) {
             bombCount++;
         }
 
         // northwest
-        if (index - gridSize >= 0 && index - 1 > 0 && index % gridSize - 1 > 0 && tiles[index - 1].classList.contains('bomb')) {
+        if (row > 0 && col - 1 >= 0 && tiles[index - 1 - SIDE_LENGTH].classList.contains("bomb")) {
             bombCount++;
         }
 
-        // console.log(`${bombCount} bombs on index ${index}`);
+        console.log(`${bombCount} bombs on index ${index}`);
 
         switch (bombCount) {
             case 0:
@@ -259,16 +269,19 @@ function generateNumbers(SIDE_LENGTH) {
                 box.classList.add("eight");
                 box.textContent = "8";
                 break;
-            case 9:
-                box.classList.add("nine");
-                box.textContent = "9";
-                break;
         }
     });
 }
 
 function bfsSquares(idx) {
     let revealedCount = 0;
+    let max = 15;
+}
+
+function checkGameOver() {
+    let bombs = document.querySelectorAll('.bomb');
+    let safeTiles = document.querySelectorAll(".box:not(.bomb)");
+    let tiles = document.querySelectorAll(".box");
 }
 
 function endGame(won) {
