@@ -3,7 +3,7 @@ body {
     margin-top: 0;
     margin-bottom: 0;
     font-family: Verdana, Geneva, Tahoma, sans-serif;
-    background-color: rgb(255, 226, 188);
+    background-color: white;
 }
 
 #top-bar {
@@ -11,11 +11,23 @@ body {
     justify-content: space-between;
     align-items: center;
     height: 10vh;
+    width: 75vh;
+    margin: auto;
+    background-color: #4b742c;
 }
 
 h1 {
     font-size: 1.2em;
     margin: 10px;
+    padding: 5px;
+    color: white;
+}
+
+#difficulty {
+    padding: 5px;
+    margin: 10px;
+    border: 3px solid white;
+    border-radius: 10px;
 }
 
 .grid {
@@ -24,7 +36,7 @@ h1 {
     height: 75vh;
     margin-left: auto;
     margin-right: auto;
-    border: 10px solid black;
+    /* border: 10px solid black; */
 }
 
 .s-grid {
@@ -43,35 +55,69 @@ h1 {
 }
 
 .box {
-    border: 1px solid white;
     display: flex;
     box-sizing: border-box;
+    justify-content: center;
+    align-items: center;
+    font-weight: 900;
+    font-size: 140%;
 }
 
 .light {
-    background-color: rgb(169, 254, 169);
+    background-color: #acd454;
 }
 
 .dark {
-    background-color: rgb(72, 163, 72);
+    background-color: #a2d149;
 }
 
 .dug.light {
-    background-color: rgb(126, 104, 40);
+    background-color: #e5c29f;
 }
 
 .dug.dark {
-    background-color: rgb(86, 70, 22);
+    background-color: #d7b899;
 }
 
-.flag {}
+.flag {
+    color: #f23607;
+}
+
+.one {
+    color: #1976d2;
+}
+
+.two {
+    color: #388e3c;
+}
+
+.three {
+    color: #d32f2f;
+}
+
+.four {
+    color: #7b1fa2;
+}
+
+.five {}
+
+.six {}
+
+.seven {}
+
+.eight {}
+
+.nine {}
 
 #footer {
     margin-top: 10px;
+    margin: auto;
     height: 10vh;
+    width: 75vh;
     display: flex;
     justify-content: center;
     align-items: center;
+    background-color: #4b742c;
 }
 
 #footer button {
@@ -82,7 +128,7 @@ h1 {
     border-radius: 10px;
     font-weight: 700;
     font-family: Verdana, Geneva, Tahoma, sans-serif;
-    background-color: rgb(169, 254, 169);
+    background-color: #acd454;
     box-shadow: 0 2px 4px rgba(0, 0, 0, .18);
 }
 
@@ -91,8 +137,8 @@ h1 {
     transition: top ease 0.5s;
     transform: translateY(-2px);
     box-shadow: 0 2px 6px rgba(0, 0, 0, .3);
-    background-color: rgb(72, 163, 72);
-    color: white;
+    background-color: white;
+    color: black;
 }
 
 #footer button:active {
