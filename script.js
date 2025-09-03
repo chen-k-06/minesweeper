@@ -1,7 +1,8 @@
-let grid_size = 10;
+let gridSize = 10;
 let grid = document.querySelector('.grid');
 let boxes;
 let moveCount = 0;
+let gameOver = false;
 const sizeToggle = document.getElementById("difficulty");
 const SMALL = 10;
 const MED = 15;
@@ -66,16 +67,24 @@ function generateGrid(SIDE_LENGTH) {
     console.log("Adding box event handlers.");
     boxes.forEach((box, index) => {
         box.addEventListener("click", function (event) {
-            moveCount++;
+            if (gameOver) {
+                return;
+            }
 
-            if (moveCount == 0) {
+            moveCount++;
+            if (moveCount == 1) {
                 generateBombs(SIDE_LENGTH, index); // only generate bombs on the first click
                 // this guarentees that the first click is safe
+
+                // eliminate all squares that 1. touch an already dug square and 2. do not contain a 
+                // bfs
+                bfsSquares(index);
             }
             else if (box.classList.contains("bomb")) {
                 endGame(false);
+                return;
             }
-            else if (!box.classList.contains("dug")) {
+            if (!box.classList.contains("dug")) {
                 box.classList.add("dug");
             }
         })
@@ -103,12 +112,15 @@ function changeGridSize(SIDE_LENGTH) {
 
     if (SIDE_LENGTH === SMALL || SIDE_LENGTH === "SMALL") {
         grid.classList.add("s-grid");
+        gridSize = SMALL;
     }
     else if (SIDE_LENGTH === MED || SIDE_LENGTH === "MED") {
         grid.classList.add("m-grid");
+        gridSize = MED;
     }
     else if (SIDE_LENGTH === LARGE || SIDE_LENGTH === "LARGE") {
         grid.classList.add("l-grid");
+        gridSize = LARGE;
     }
     else {
         console.log("Passed invalid grid size to changeGridSize()");
@@ -128,21 +140,27 @@ function changeGridSize(SIDE_LENGTH) {
  * @returns {void}
  */
 function generateBombs(SIDE_LENGTH, selectedIdx) {
-    // randomly generate a bombCounts[SIDE_LENGTH] long sequence of numbers between 0 and SIDE_LENGTH^2
-    let sequence;
+    // randomly generate a bombCounts[sizeToggle.value] long sequence of numbers between 0 and SIDE_LENGTH^2
+    let sequence = [];
+    console.log(bombCounts[sizeToggle.value]) // must use the sizeToggle because this stores the strings "SMALL"/"MED"/"LARGE" and not the numeric constants
 
-    for (let i = 0; i < bombCounts[SIDE_LENGTH]; i++) {
+    for (let i = 0; i < bombCounts[sizeToggle.value]; i++) {
         let num = Math.floor(Math.random() * (SIDE_LENGTH ** 2 + 1));
-        while (num in sequence && num != selectedIdx) {
+        while (sequence.includes(num) || num == selectedIdx) {
             num = Math.floor(Math.random() * (SIDE_LENGTH ** 2 + 1));
         }
         sequence.push(num);
     }
 
-    // append bomb class to all tiles indexed in sequence
-    for (let num in sequence) {
+    console.log(`Bombs on ${sequence} indexes`);
 
-    }
+    // append bomb class to all tiles indexed in sequence
+    boxes.forEach((box, index) => {
+        if (sequence.includes(index)) {
+            box.classList.add('bomb');
+            box.textContent = "B";
+        }
+    });
 
     generateNumbers(SIDE_LENGTH);
 }
@@ -160,7 +178,97 @@ function generateBombs(SIDE_LENGTH, selectedIdx) {
  */
 function generateNumbers(SIDE_LENGTH) {
     let bombs = document.querySelectorAll('.bomb');
-    let safeTiles = document.querySelectorAll(".tile:not(.bomb)");
+    let safeTiles = document.querySelectorAll(".box:not(.bomb)");
+    let tiles = document.querySelectorAll(".box");
+
+    safeTiles.forEach((box, index) => {
+        let bombCount = 0;
+
+        // north
+        if (index - gridSize >= 0 && tiles[index - gridSize].classList.contains('bomb')) {
+            bombCount++;
+        }
+        // northeast
+        if (index - gridSize + 1 >= 0 && index % gridSize + 1 < gridSize && tiles[index - gridSize + 1].classList.contains('bomb')) {
+            bombCount++;
+        }
+        // east
+        if (index + 1 < gridSize ** 2 && index % gridSize + 1 < gridSize && tiles[index + 1].classList.contains('bomb')) {
+            bombCount++;
+        }
+
+        // southeast
+        if (index + gridSize + 1 < gridSize ** 2 && index % gridSize + 1 < gridSize && tiles[index + gridSize].classList.contains('bomb')) {
+            bombCount++;
+        }
+
+        // south
+        if (index + gridSize < gridSize ** 2 && tiles[index + gridSize].classList.contains('bomb')) {
+            bombCount++;
+        }
+
+        // southwest
+        if (index + gridSize < gridSize ** 2 && index - 1 > 0 && tiles[index + gridSize - 1].classList.contains('bomb')) {
+            bombCount++;
+        }
+
+        // west
+        if (index - 1 > 0 && index % gridSize - 1 > 0 && tiles[index - 1].classList.contains('bomb')) {
+            bombCount++;
+        }
+
+        // northwest
+        if (index - gridSize >= 0 && index - 1 > 0 && index % gridSize - 1 > 0 && tiles[index - 1].classList.contains('bomb')) {
+            bombCount++;
+        }
+
+        // console.log(`${bombCount} bombs on index ${index}`);
+
+        switch (bombCount) {
+            case 0:
+                break;
+            case 1:
+                box.classList.add("one");
+                box.textContent = "1";
+                break;
+            case 2:
+                box.classList.add("two");
+                box.textContent = "2";
+                break;
+            case 3:
+                box.classList.add("three");
+                box.textContent = "3";
+                break;
+            case 4:
+                box.classList.add("four");
+                box.textContent = "4";
+                break;
+            case 5:
+                box.classList.add("five");
+                box.textContent = "5";
+                break;
+            case 6:
+                box.classList.add("six");
+                box.textContent = "6";
+                break;
+            case 7:
+                box.classList.add("seven");
+                box.textContent = "7";
+                break;
+            case 8:
+                box.classList.add("eight");
+                box.textContent = "8";
+                break;
+            case 9:
+                box.classList.add("nine");
+                box.textContent = "9";
+                break;
+        }
+    });
+}
+
+function bfsSquares(idx) {
+    let revealedCount = 0;
 }
 
 function endGame(won) {
@@ -170,4 +278,5 @@ function endGame(won) {
     else {
         console.log("Game over. User lost.");
     }
+    gameOver = true;
 }
