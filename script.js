@@ -13,6 +13,8 @@ const bombCounts = {
     MED: 40,
     LARGE: 60
 }
+const numColors = 6;
+const colors = ["#FF6B81", "#FFD93D", "#40BFFF", "#7DFF6A", "#A566FF", "#FF914D"];
 
 document.addEventListener("DOMContentLoaded", function () {
     generateGrid(SMALL);
@@ -73,22 +75,79 @@ function generateGrid(SIDE_LENGTH) {
             }
 
             moveCount++;
-            if (!box.classList.contains("dug")) {
-                box.classList.add("dug");
-            }
             if (moveCount == 1) {
+                box.classList.add("dug");
                 generateBombs(SIDE_LENGTH, index); // only generate bombs on the first click
                 // this guarentees that the first click is safe
 
                 // eliminate all squares that 1. touch an already dug square and 2. do not contain a 
                 // bfs
                 bfsSquares(index, SIDE_LENGTH);
+
+                // reveal all numbers that are already dug
+                boxes.forEach((box, index) => {
+                    if (box.classList.contains("dug")) {
+                        if (box.classList.contains("one")) {
+                            box.textContent = "1";
+                        }
+                        else if (box.classList.contains("two")) {
+                            box.textContent = "2";
+                        }
+                        else if (box.classList.contains("three")) {
+                            box.textContent = "3";
+                        }
+                        else if (box.classList.contains("four")) {
+                            box.textContent = "4";
+                        }
+                        else if (box.classList.contains("five")) {
+                            box.textContent = "5";
+                        }
+                        else if (box.classList.contains("six")) {
+                            box.textContent = "6";
+                        }
+                        else if (box.classList.contains("seven")) {
+                            box.textContent = "7";
+                        }
+                        else if (box.classList.contains("eight")) {
+                            box.textContent = "8";
+                        }
+                    }
+                })
             }
             else if (box.classList.contains("bomb")) {
                 endGame(false);
                 return;
             }
+            else {
+                if (!box.classList.contains("dug")) {
+                    box.classList.add("dug");
 
+                    if (box.classList.contains("one")) {
+                        box.textContent = "1";
+                    }
+                    else if (box.classList.contains("two")) {
+                        box.textContent = "2";
+                    }
+                    else if (box.classList.contains("three")) {
+                        box.textContent = "3";
+                    }
+                    else if (box.classList.contains("four")) {
+                        box.textContent = "4";
+                    }
+                    else if (box.classList.contains("five")) {
+                        box.textContent = "5";
+                    }
+                    else if (box.classList.contains("six")) {
+                        box.textContent = "6";
+                    }
+                    else if (box.classList.contains("seven")) {
+                        box.textContent = "7";
+                    }
+                    else if (box.classList.contains("eight")) {
+                        box.textContent = "8";
+                    }
+                }
+            }
             if (checkGameOver()) {
                 endGame(true);
                 return;
@@ -98,6 +157,7 @@ function generateGrid(SIDE_LENGTH) {
 
     // two finger tap event handlers -> add a flag
     // 🚩
+
 }
 
 /**
@@ -196,7 +256,6 @@ function generateNumbers(SIDE_LENGTH) {
         let bombCount = 0;
         let row = Math.floor(index / SIDE_LENGTH);
         let col = index % SIDE_LENGTH;
-        console.log(tiles[index - SIDE_LENGTH])
 
         // north
         if (row > 0 && tiles[index - SIDE_LENGTH].classList.contains("bomb")) {
@@ -236,42 +295,54 @@ function generateNumbers(SIDE_LENGTH) {
             bombCount++;
         }
 
-        console.log(`${bombCount} bombs on index ${index}`);
-
         switch (bombCount) {
             case 0:
                 break;
             case 1:
                 box.classList.add("one");
-                box.textContent = "1";
+                if (box.classList.contains("dug")) {
+                    box.textContent = "1";
+                }
                 break;
             case 2:
                 box.classList.add("two");
-                box.textContent = "2";
-                break;
+                if (box.classList.contains("dug")) {
+                    box.textContent = "2";
+                } break;
             case 3:
                 box.classList.add("three");
-                box.textContent = "3";
-                break;
+                if (box.classList.contains("dug")) {
+                    box.textContent = "3";
+                } break;
             case 4:
                 box.classList.add("four");
-                box.textContent = "4";
+                if (box.classList.contains("dug")) {
+                    box.textContent = "4";
+                }
                 break;
             case 5:
                 box.classList.add("five");
-                box.textContent = "5";
+                if (box.classList.contains("dug")) {
+                    box.textContent = "5";
+                }
                 break;
             case 6:
                 box.classList.add("six");
-                box.textContent = "6";
+                if (box.classList.contains("dug")) {
+                    box.textContent = "6";
+                }
                 break;
             case 7:
                 box.classList.add("seven");
-                box.textContent = "7";
+                if (box.classList.contains("dug")) {
+                    box.textContent = "7";
+                }
                 break;
             case 8:
                 box.classList.add("eight");
-                box.textContent = "8";
+                if (box.classList.contains("dug")) {
+                    box.textContent = "8";
+                }
                 break;
         }
     });
@@ -279,13 +350,15 @@ function generateNumbers(SIDE_LENGTH) {
 
 function bfsSquares(inital, SIDE_LENGTH) {
     let revealed = 0;
-    let max = 20;
+    let max = 30;
     let tiles = document.querySelectorAll(".box");
     let queue = [];
     queue.push(inital);
 
     while (queue.length > 0 && revealed < max) {
         let index = queue.shift();
+        revealed++;
+
         let row = Math.floor(index / SIDE_LENGTH);
         let col = index % SIDE_LENGTH;
 
@@ -295,57 +368,76 @@ function bfsSquares(inital, SIDE_LENGTH) {
         if (row > 0 && !tiles[index - SIDE_LENGTH].classList.contains("bomb")) {
             queue.push(index - SIDE_LENGTH);
         }
-        // // northeast
-        // if (row > 0 && col + 1 < SIDE_LENGTH && !tiles[index - SIDE_LENGTH + 1].classList.contains("bomb")) {
-        //     queue.push(index - SIDE_LENGTH + 1);
-        // }
 
         // east
         if (col + 1 < SIDE_LENGTH && !tiles[index + 1].classList.contains("bomb")) {
             queue.push(index + 1);
         }
 
-        // // southeast
-        // if (row + 1 < SIDE_LENGTH && col + 1 < SIDE_LENGTH && !tiles[index + SIDE_LENGTH + 1].classList.contains("bomb")) {
-        //     queue.push(index + SIDE_LENGTH + 1);
-        // }
-
         // south
         if (row + 1 < SIDE_LENGTH && !tiles[index + SIDE_LENGTH].classList.contains("bomb")) {
             queue.push(index + SIDE_LENGTH);
         }
 
-        // // southwest
-        // if (row + 1 < SIDE_LENGTH && col - 1 >= 0 && !tiles[index - 1 + SIDE_LENGTH].classList.contains("bomb")) {
-        //     queue.push(index - 1 + SIDE_LENGTH);
-        // }
-
         // west
         if (col - 1 >= 0 && !tiles[index - 1].classList.contains("bomb")) {
             queue.push(index - 1);
         }
-
-        // // northwest
-        // if (row > 0 && col - 1 >= 0 && !tiles[index - 1 - SIDE_LENGTH].classList.contains("bomb")) {
-        //     queue.push(index - 1 - SIDE_LENGTH);
-        // }
-
-        revealed++;
     }
 }
 
+/**
+ * Checks if the game is over by checking if every bomb is marked with the `flag` class, or if 
+ * all safe tiles have been marked with the `dug` class.
+ * 
+ * @returns {boolean} true if game over, false otherwise
+ */
 function checkGameOver() {
     let bombs = document.querySelectorAll('.bomb');
-    let safeTiles = document.querySelectorAll(".box:not(.bomb)");
     let tiles = document.querySelectorAll(".box");
+    let gameWon = false;
+
+    // win condition 1: all bombs are flagged
+    let flag1 = true;
+    for (let bomb of bombs) {
+        if (!bomb.classList.contains("flag")) {
+            flag1 = false; // this win condition was not satisfied
+            break;
+        }
+    }
+
+    // win condition 2: all safe tiles have been dug
+    // tested & works
+    let flag2 = true;
+    for (let tile of tiles) {
+        if (tile.classList.contains("bomb")) {
+            continue;
+        }
+        else if (!tile.classList.contains("dug")) { // only safe tiles
+            flag2 = false; // this win condition was not satisfied
+        }
+    }
+    gameWon = flag1 || flag2; // game is over if either win condition 1 or 2 have been satisfied
+    return gameWon;
 }
 
+/**
+ * Handles game ending logic, including console logging and bomb reveals.
+ * 
+ * @param {boolean} won - true if the user won the game, and false otherwise
+ * @returns {void}
+ */
 function endGame(won) {
     if (won) {
         console.log("User won the game!");
     }
     else {
         console.log("Game over. User lost.");
+        let bombs = document.querySelectorAll('.bomb');
+
+        for (let bomb of bombs) {
+            bomb.style.backgroundColor = colors[Math.floor(Math.random() * (numColors))];
+        }
     }
     gameOver = true;
 }
