@@ -3,6 +3,7 @@ let grid = document.querySelector('.grid');
 let boxes;
 let moveCount = 0;
 let gameOver = false;
+let flagCount;
 const sizeToggle = document.getElementById("difficulty");
 const SMALL = 10;
 const MED = 15;
@@ -61,10 +62,10 @@ function generateGrid(SIDE_LENGTH) {
         }
     }
 
-    // makes the boxes on the board clickable 
     boxes = document.querySelectorAll('.box');
-
     console.log("Adding box event handlers.");
+
+    // click handlers
     boxes.forEach((box, index) => {
         box.addEventListener("click", function (event) {
             if (gameOver) {
@@ -94,6 +95,9 @@ function generateGrid(SIDE_LENGTH) {
             }
         })
     });
+
+    // two finger tap event handlers -> add a flag
+    // 🚩
 }
 
 /**
@@ -275,13 +279,13 @@ function generateNumbers(SIDE_LENGTH) {
 
 function bfsSquares(inital, SIDE_LENGTH) {
     let revealed = 0;
-    let max = 15;
+    let max = 20;
     let tiles = document.querySelectorAll(".box");
     let queue = [];
     queue.push(inital);
 
     while (queue.length > 0 && revealed < max) {
-        let index = queue.pop();
+        let index = queue.shift();
         let row = Math.floor(index / SIDE_LENGTH);
         let col = index % SIDE_LENGTH;
 
@@ -295,6 +299,7 @@ function bfsSquares(inital, SIDE_LENGTH) {
         // if (row > 0 && col + 1 < SIDE_LENGTH && !tiles[index - SIDE_LENGTH + 1].classList.contains("bomb")) {
         //     queue.push(index - SIDE_LENGTH + 1);
         // }
+
         // east
         if (col + 1 < SIDE_LENGTH && !tiles[index + 1].classList.contains("bomb")) {
             queue.push(index + 1);
@@ -327,7 +332,6 @@ function bfsSquares(inital, SIDE_LENGTH) {
 
         revealed++;
     }
-
 }
 
 function checkGameOver() {
