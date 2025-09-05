@@ -21,9 +21,15 @@
     </div>
     <div class="grid s-grid"></div>
     <div id="footer">
-        <a href=""> <button>Play Again</button> </a>
-        <a><button>GitHub Repo</button></a>
-        <button>Hint</button>
+        <a href=""><button>Play Again</button> </a>
+        <a href="https://github.com/chen-k-06/minesweeper" target="_blank"> <button>GitHub Repo</button></a>
+        <button id="hint">Hint</button>
+    </div>
+    <div id="endgame-popup" class="hidden">
+        <div id="popup-grouper">
+            <div id="endgame-text" class="hidden"></div>
+            <a href=""><button id="play-again">Play Again 🔄</button></a>
+        </div>
     </div>
     <script defer src="script.js"></script>
 </body>
