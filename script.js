@@ -5,6 +5,11 @@ let moveCount = 0;
 let gameOver = false;
 let flagCount;
 const sizeToggle = document.getElementById("difficulty");
+const flagCounter = document.getElementById("flag-counter");
+const helpButton = document.getElementById("hint");
+const endgamePopup = document.getElementById("endgame-popup");
+const endgameText = document.getElementById("endgame-text");
+const playAgainButton = document.getElementById("play-again");
 const SMALL = 10;
 const MED = 15;
 const LARGE = 23;
@@ -13,8 +18,7 @@ const bombCounts = {
     MED: 40,
     LARGE: 60
 }
-const numColors = 6;
-const colors = ["#FF6B81", "#FFD93D", "#40BFFF", "#7DFF6A", "#A566FF", "#FF914D"];
+const colors = ["#FF6B81", "#FFD93D", "#40BFFF", "#7DFF6A", "#A566FF", "#FF914D"]; // bomb colors
 
 document.addEventListener("DOMContentLoaded", function () {
     generateGrid(SMALL);
@@ -40,6 +44,8 @@ function generateGrid(SIDE_LENGTH) {
 
     // reset globals 
     moveCount = 0;
+    flagCounter.textContent = `🚩 ${bombCounts[sizeToggle.value]}`;
+    gameOver = false;
     grid.replaceChildren();
 
     // update grid class
@@ -67,8 +73,9 @@ function generateGrid(SIDE_LENGTH) {
     boxes = document.querySelectorAll('.box');
     console.log("Adding box event handlers.");
 
-    // click handlers
     boxes.forEach((box, index) => {
+
+        // single finger event handlers
         box.addEventListener("click", function (event) {
             if (gameOver) {
                 return;
@@ -153,11 +160,14 @@ function generateGrid(SIDE_LENGTH) {
                 return;
             }
         })
+
+        // two finger tap event handlers -> add a flag
+        // 🚩
+        box.addEventListener("contextmenu", function (e) {
+            e.preventDefault(); // stop the default right-click/two-finger menu
+        });
+
     });
-
-    // two finger tap event handlers -> add a flag
-    // 🚩
-
 }
 
 /**
@@ -350,7 +360,7 @@ function generateNumbers(SIDE_LENGTH) {
 
 function bfsSquares(inital, SIDE_LENGTH) {
     let revealed = 0;
-    let max = 30;
+    let max = 25;
     let tiles = document.querySelectorAll(".box");
     let queue = [];
     queue.push(inital);
@@ -365,22 +375,22 @@ function bfsSquares(inital, SIDE_LENGTH) {
         tiles[index].classList.add("dug");
 
         // north
-        if (row > 0 && !tiles[index - SIDE_LENGTH].classList.contains("bomb")) {
+        if (row > 0 && !tiles[index - SIDE_LENGTH].classList.contains("bomb") && !tiles[index - SIDE_LENGTH].classList.contains("dug")) {
             queue.push(index - SIDE_LENGTH);
         }
 
         // east
-        if (col + 1 < SIDE_LENGTH && !tiles[index + 1].classList.contains("bomb")) {
+        if (col + 1 < SIDE_LENGTH && !tiles[index + 1].classList.contains("bomb") && !tiles[index + 1].classList.contains("dug")) {
             queue.push(index + 1);
         }
 
         // south
-        if (row + 1 < SIDE_LENGTH && !tiles[index + SIDE_LENGTH].classList.contains("bomb")) {
+        if (row + 1 < SIDE_LENGTH && !tiles[index + SIDE_LENGTH].classList.contains("bomb") && !tiles[index + SIDE_LENGTH].classList.contains("dug")) {
             queue.push(index + SIDE_LENGTH);
         }
 
         // west
-        if (col - 1 >= 0 && !tiles[index - 1].classList.contains("bomb")) {
+        if (col - 1 >= 0 && !tiles[index - 1].classList.contains("bomb") && !tiles[index - 1].classList.contains("dug")) {
             queue.push(index - 1);
         }
     }
@@ -422,22 +432,48 @@ function checkGameOver() {
 }
 
 /**
- * Handles game ending logic, including console logging and bomb reveals.
+ * Handles game ending logic, including console logging and bomb reveals/coloring.
  * 
  * @param {boolean} won - true if the user won the game, and false otherwise
  * @returns {void}
  */
 function endGame(won) {
+    let delay = 0; // gradually increment the delay to create a determinate ordering
+
     if (won) {
         console.log("User won the game!");
     }
     else {
         console.log("Game over. User lost.");
-        let bombs = document.querySelectorAll('.bomb');
 
+        let bombs = document.querySelectorAll('.bomb');
         for (let bomb of bombs) {
-            bomb.style.backgroundColor = colors[Math.floor(Math.random() * (numColors))];
+            setTimeout(() => { // delay the coloring of bombs
+                let color = Math.floor(Math.random() * colors.length);
+                bomb.style.backgroundColor = colors[color];
+                bomb.style.color = "rgba(0, 0, 0, 0.35)";
+                bomb.style.paddingTop = "0px";
+                bomb.style.paddingBottom = "15%";
+                if (grid.classList.contains("s-grid")) {
+                    bomb.style.fontSize = "300%";
+                }
+                else if (grid.classList.contains("m-grid")) {
+                    bomb.style.fontSize = "225%";
+                }
+                else {
+                    bomb.style.fontSize = "150%";
+                }
+                bomb.textContent = "●";
+            }, delay);
+            delay += 50;
         }
     }
     gameOver = true;
+    endgameText.textContent = "Game Over!"
+    delay += 150; // take longer to display final popup 
+
+    setTimeout(() => {
+        endgameText.classList.remove("hidden");
+        endgamePopup.classList.remove("hidden");
+    }, delay);
 }
