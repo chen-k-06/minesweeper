@@ -4,6 +4,10 @@ let boxes;
 let moveCount = 0;
 let gameOver = false;
 let flagCount;
+let longTapFired = false;
+let longTapTimer = null;
+const board = document.getElementById("board");
+const LONG_TAP_MS = 600;
 const sizeToggle = document.getElementById("difficulty");
 const flagCounter = document.getElementById("flag-counter");
 const helpButton = document.getElementById("hint");
@@ -22,6 +26,18 @@ const colors = ["#FF6B81", "#FFD93D", "#40BFFF", "#7DFF6A", "#A566FF", "#FF914D"
 
 document.addEventListener("DOMContentLoaded", function () {
     generateGrid(SMALL);
+
+    document.addEventListener(
+        "contextmenu",
+        (e) => {
+            const tile = e.target.closest(".box");
+            if (!tile || gameOver) return;
+            e.preventDefault();   // stop the menu
+            e.stopPropagation();  // stop bubbling
+            handleFlagging(tile);
+        },
+        true
+    );
 });
 
 sizeToggle.addEventListener("change", function (event) {
@@ -45,6 +61,7 @@ function generateGrid(SIDE_LENGTH) {
     // reset globals 
     moveCount = 0;
     flagCounter.textContent = `🚩 ${bombCounts[sizeToggle.value]}`;
+    flagCount = bombCounts[sizeToggle.value];
     gameOver = false;
     grid.replaceChildren();
 
@@ -74,10 +91,13 @@ function generateGrid(SIDE_LENGTH) {
     console.log("Adding box event handlers.");
 
     boxes.forEach((box, index) => {
-
         // single finger event handlers
         box.addEventListener("click", function (event) {
             if (gameOver) {
+                return;
+            }
+
+            if (box.classList.contains("flag")) {
                 return;
             }
 
@@ -161,12 +181,43 @@ function generateGrid(SIDE_LENGTH) {
             }
         })
 
-        // two finger tap event handlers -> add a flag
-        // 🚩
-        box.addEventListener("contextmenu", function (e) {
-            e.preventDefault(); // stop the default right-click/two-finger menu
+        // long tap event handler
+        box.addEventListener("touchstart", (e) => {
+            if (e.touches.length === 1) {
+                longTapTimer = setTimeout(() => {
+                    longTapFired = true;
+                    console.log("Long tap detected (touch)");
+
+                    // handle flag addition / removal 
+                    handleFlagging(box);
+                }, LONG_TAP_MS);
+            }
+            else if (e.touches.length === 2) {
+                // two-finger tap detected
+                console.log("Two-finger tap detected");
+                e.preventDefault(); // prevent system gestures like zoom
+                handleFlagging(box);
+            }
+        }, { passive: false });
+
+        box.addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+            handleFlagging(box);
         });
 
+        box.addEventListener("mousedown", (e) => {
+            if (e.button === 2) {
+                e.preventDefault();
+                handleFlagging(box);
+            }
+        }, { passive: false });
+
+        box.addEventListener("touchend", (e) => {
+            clearTimeout(longTapTimer);
+            longTapTimer = null;
+            // give the flag a short lifetime
+            setTimeout(() => { longTapFired = false; }, 300);
+        }, { passive: false });
     });
 }
 
@@ -394,6 +445,33 @@ function bfsSquares(inital, SIDE_LENGTH) {
             queue.push(index - 1);
         }
     }
+}
+
+function handleFlagging(box) {
+    if (box.classList.contains("dug")) {
+        return;
+    }
+    if (box.classList.contains("flag")) {
+        console.log("Removed flag");
+        box.textContent = "";
+        flagCount++;
+        box.classList.remove("flag");
+        if (box.classList.contains("bomb")) {
+            box.textContent = "B";
+        }
+    }
+    else {
+        console.log("Added flag.");
+        box.textContent = "🚩"
+        flagCount--;
+        box.classList.add("flag");
+    }
+    checkGameOver();
+    updateFlagCounter();
+}
+
+function updateFlagCounter() {
+    flagCounter.textContent = `🚩 ${flagCount}`;
 }
 
 /**
