@@ -14,6 +14,8 @@ const helpButton = document.getElementById("hint");
 const endgamePopup = document.getElementById("endgame-popup");
 const endgameText = document.getElementById("endgame-text");
 const playAgainButton = document.getElementById("play-again");
+const suppressClickAfterLongPress = new WeakSet();
+const longPressTimers = new Map();
 const SMALL = 10;
 const MED = 15;
 const LARGE = 23;
@@ -78,8 +80,7 @@ function generateGrid(SIDE_LENGTH) {
 
             if ((row + column) % 2 == 0) {
                 box.classList.add("light");
-            }
-            else {
+            } else {
                 box.classList.add("dark");
             }
 
@@ -91,133 +92,132 @@ function generateGrid(SIDE_LENGTH) {
     console.log("Adding box event handlers.");
 
     boxes.forEach((box, index) => {
-        // single finger event handlers
+        // left click -> dig
         box.addEventListener("click", function (event) {
-            if (gameOver) {
+            // If flagged via long-press or contextmenu recently, skip this click
+            if (suppressClickAfterLongPress.has(box)) {
+                event.preventDefault();
+                suppressClickAfterLongPress.delete(box);
                 return;
             }
 
-            if (box.classList.contains("flag")) {
-                return;
-            }
+            if (gameOver || box.classList.contains("flag")) return;
 
             moveCount++;
             if (moveCount == 1) {
                 box.classList.add("dug");
-                generateBombs(SIDE_LENGTH, index); // only generate bombs on the first click
-                // this guarentees that the first click is safe
-
-                // eliminate all squares that 1. touch an already dug square and 2. do not contain a 
-                // bfs
+                generateBombs(SIDE_LENGTH, index); // first click is always safe
                 bfsSquares(index, SIDE_LENGTH);
 
-                // reveal all numbers that are already dug
-                boxes.forEach((box, index) => {
-                    if (box.classList.contains("dug")) {
-                        if (box.classList.contains("one")) {
-                            box.textContent = "1";
-                        }
-                        else if (box.classList.contains("two")) {
-                            box.textContent = "2";
-                        }
-                        else if (box.classList.contains("three")) {
-                            box.textContent = "3";
-                        }
-                        else if (box.classList.contains("four")) {
-                            box.textContent = "4";
-                        }
-                        else if (box.classList.contains("five")) {
-                            box.textContent = "5";
-                        }
-                        else if (box.classList.contains("six")) {
-                            box.textContent = "6";
-                        }
-                        else if (box.classList.contains("seven")) {
-                            box.textContent = "7";
-                        }
-                        else if (box.classList.contains("eight")) {
-                            box.textContent = "8";
-                        }
-                    }
-                })
-            }
-            else if (box.classList.contains("bomb")) {
+                // adding bomb counts (text)
+                boxes.forEach((b) => {
+                    if (!b.classList.contains("dug")) return;
+                    if (b.classList.contains("one")) b.textContent = "1";
+                    else if (b.classList.contains("two")) b.textContent = "2";
+                    else if (b.classList.contains("three")) b.textContent = "3";
+                    else if (b.classList.contains("four")) b.textContent = "4";
+                    else if (b.classList.contains("five")) b.textContent = "5";
+                    else if (b.classList.contains("six")) b.textContent = "6";
+                    else if (b.classList.contains("seven")) b.textContent = "7";
+                    else if (b.classList.contains("eight")) b.textContent = "8";
+                });
+            } else if (box.classList.contains("bomb")) {
                 endGame(false);
                 return;
-            }
-            else {
-                if (!box.classList.contains("dug")) {
-                    box.classList.add("dug");
-
-                    if (box.classList.contains("one")) {
-                        box.textContent = "1";
-                    }
-                    else if (box.classList.contains("two")) {
-                        box.textContent = "2";
-                    }
-                    else if (box.classList.contains("three")) {
-                        box.textContent = "3";
-                    }
-                    else if (box.classList.contains("four")) {
-                        box.textContent = "4";
-                    }
-                    else if (box.classList.contains("five")) {
-                        box.textContent = "5";
-                    }
-                    else if (box.classList.contains("six")) {
-                        box.textContent = "6";
-                    }
-                    else if (box.classList.contains("seven")) {
-                        box.textContent = "7";
-                    }
-                    else if (box.classList.contains("eight")) {
-                        box.textContent = "8";
-                    }
-                }
+            } else if (!box.classList.contains("dug")) {
+                box.classList.add("dug");
+                if (box.classList.contains("one")) box.textContent = "1";
+                else if (box.classList.contains("two")) box.textContent = "2";
+                else if (box.classList.contains("three")) box.textContent = "3";
+                else if (box.classList.contains("four")) box.textContent = "4";
+                else if (box.classList.contains("five")) box.textContent = "5";
+                else if (box.classList.contains("six")) box.textContent = "6";
+                else if (box.classList.contains("seven")) box.textContent = "7";
+                else if (box.classList.contains("eight")) box.textContent = "8";
             }
             if (checkGameOver()) {
                 endGame(true);
                 return;
             }
-        })
-
-        // long tap event handler
-        box.addEventListener("touchstart", (e) => {
-            if (e.touches.length === 1) {
-                longTapTimer = setTimeout(() => {
-                    longTapFired = true;
-                    console.log("Long tap detected (touch)");
-
-                    // handle flag addition / removal 
-                    handleFlagging(box);
-                }, LONG_TAP_MS);
-            }
-            else if (e.touches.length === 2) {
-                // two-finger tap detected
-                console.log("Two-finger tap detected");
-                e.preventDefault(); // prevent system gestures like zoom
-                handleFlagging(box);
-            }
-        }, { passive: false });
-
-        box.addEventListener("contextmenu", (e) => {
-            e.preventDefault();
-            handleFlagging(box);
         });
 
-        box.addEventListener("mousedown", (e) => {
-            if (e.button === 2) {
+        // right click / two finger tap -> flag
+        box.addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!gameOver) handleFlagging(box);
+            // suppress the synthetic click that often follows contextmenu
+            suppressClickAfterLongPress.add(box);
+
+            if (checkGameOver()) {
+                endGame(true);
+                return;
+            }
+        });
+
+        // some browsers fire 'auxclick' for non-left buttons; suppress it.
+        box.addEventListener("auxclick", (e) => {
+            if (e.button !== 0) e.preventDefault();
+        });
+
+        // long press even handler 
+        let startX = 0, startY = 0;
+
+        box.addEventListener("pointerdown", (e) => {
+            if (gameOver || box.classList.contains("dug")) return;
+
+            // prevents double fire 
+            if (e.pointerType === "mouse" && e.button !== 0) return;
+
+            if (e.pointerType === "touch" && e.isPrimary === false) {
                 e.preventDefault();
                 handleFlagging(box);
+                suppressClickAfterLongPress.add(box);
+                return;
             }
-        }, { passive: false });
 
-        box.addEventListener("touchend", (e) => {
-            clearTimeout(longTapTimer);
-            longTapTimer = null;
-            // give the flag a short lifetime
-            setTimeout(() => { longTapFired = false; }, 300);
-        }, { passive: false });
+            const isTouchPrimary = e.pointerType === "touch" && e.isPrimary === true;
+            const isMousePrimaryDown = e.pointerType === "mouse" && (e.buttons & 1) === 1;
+            if (!(isTouchPrimary || isMousePrimaryDown)) return;
+
+            startX = e.clientX; startY = e.clientY;
+
+            // Start long-press timer (works for mouse & primary touch)
+            const timerId = setTimeout(() => {
+                suppressClickAfterLongPress.add(box);  // prevent the subsequent click from digging
+                handleFlagging(box);
+            }, LONG_TAP_MS);
+
+            longPressTimers.set(e.pointerId, timerId);
+
+            if (checkGameOver()) {
+                endGame(true);
+                return;
+            }
+        }, { passive: true });
+
+        function clearLP(e) {
+            const t = longPressTimers.get(e.pointerId);
+            if (t) {
+                clearTimeout(t);
+                longPressTimers.delete(e.pointerId);
+            }
+
+            if (checkGameOver()) {
+                endGame(true);
+                return;
+            }
+        }
+
+        box.addEventListener("pointerup", clearLP);
+        box.addEventListener("pointercancel", clearLP);
+        box.addEventListener("pointerleave", clearLP);
+        box.addEventListener("pointerout", clearLP);
+
+        if (checkGameOver()) {
+            endGame(true);
+            return;
+        }
     });
 }
 
@@ -275,9 +275,9 @@ function generateBombs(SIDE_LENGTH, selectedIdx) {
     console.log(bombCounts[sizeToggle.value]) // must use the sizeToggle because this stores the strings "SMALL"/"MED"/"LARGE" and not the numeric constants
 
     for (let i = 0; i < bombCounts[sizeToggle.value]; i++) {
-        let num = Math.floor(Math.random() * (SIDE_LENGTH ** 2 + 1));
-        while (sequence.includes(num) || num == selectedIdx) {
-            num = Math.floor(Math.random() * (SIDE_LENGTH ** 2 + 1));
+        let num = Math.floor(Math.random() * (SIDE_LENGTH ** 2));
+        while (sequence.includes(num) || num === selectedIdx) {
+            num = Math.floor(Math.random() * (SIDE_LENGTH ** 2));
         }
         sequence.push(num);
     }
@@ -288,7 +288,6 @@ function generateBombs(SIDE_LENGTH, selectedIdx) {
     boxes.forEach((box, index) => {
         if (sequence.includes(index)) {
             box.classList.add('bomb');
-            box.textContent = "B";
         }
     });
 
@@ -457,7 +456,6 @@ function handleFlagging(box) {
         flagCount++;
         box.classList.remove("flag");
         if (box.classList.contains("bomb")) {
-            box.textContent = "B";
         }
     }
     else {
@@ -474,6 +472,42 @@ function updateFlagCounter() {
     flagCounter.textContent = `🚩 ${flagCount}`;
 }
 
+helpButton.addEventListener("click", () => {
+    if (moveCount == 0) {
+        generateBombs(gridSize, 0); // first click is always safe
+        moveCount++;
+    }
+
+    if (gameOver) return;
+
+    const tiles = Array.from(document.querySelectorAll(".box"));
+    const safeTiles = tiles.filter(tile =>
+        !tile.classList.contains("bomb") &&
+        !tile.classList.contains("dug") &&
+        !tile.classList.contains("flag")
+    );
+
+    if (safeTiles.length === 0) return;
+
+    // pick a random safe tile
+    const randomTile = safeTiles[Math.floor(Math.random() * safeTiles.length)];
+    randomTile.classList.add("dug");
+
+    // show number if it has one
+    if (randomTile.classList.contains("one")) randomTile.textContent = "1";
+    else if (randomTile.classList.contains("two")) randomTile.textContent = "2";
+    else if (randomTile.classList.contains("three")) randomTile.textContent = "3";
+    else if (randomTile.classList.contains("four")) randomTile.textContent = "4";
+    else if (randomTile.classList.contains("five")) randomTile.textContent = "5";
+    else if (randomTile.classList.contains("six")) randomTile.textContent = "6";
+    else if (randomTile.classList.contains("seven")) randomTile.textContent = "7";
+    else if (randomTile.classList.contains("eight")) randomTile.textContent = "8";
+
+    if (checkGameOver()) {
+        endGame(true);
+    }
+});
+
 /**
  * Checks if the game is over by checking if every bomb is marked with the `flag` class, or if 
  * all safe tiles have been marked with the `dug` class.
@@ -481,9 +515,11 @@ function updateFlagCounter() {
  * @returns {boolean} true if game over, false otherwise
  */
 function checkGameOver() {
+    if (moveCount == 0) {
+        return false;
+    }
     let bombs = document.querySelectorAll('.bomb');
     let tiles = document.querySelectorAll(".box");
-    let gameWon = false;
 
     // win condition 1: all bombs are flagged
     let flag1 = true;
@@ -495,7 +531,6 @@ function checkGameOver() {
     }
 
     // win condition 2: all safe tiles have been dug
-    // tested & works
     let flag2 = true;
     for (let tile of tiles) {
         if (tile.classList.contains("bomb")) {
@@ -505,8 +540,7 @@ function checkGameOver() {
             flag2 = false; // this win condition was not satisfied
         }
     }
-    gameWon = flag1 || flag2; // game is over if either win condition 1 or 2 have been satisfied
-    return gameWon;
+    return flag1 || flag2; // game is over if either win condition 1 or 2 have been satisfied
 }
 
 /**
@@ -517,12 +551,42 @@ function checkGameOver() {
  */
 function endGame(won) {
     let delay = 0; // gradually increment the delay to create a determinate ordering
+    let lag = 75;
+    if (grid.classList.contains("l-grid")) {
+        lag = 15;
+    }
+    if (grid.classList.contains("m-grid")) {
+        lag = 40;
+    }
 
     if (won) {
         console.log("User won the game!");
+        endgameText.textContent = "You won!"
+
+        let bombs = document.querySelectorAll('.bomb');
+        for (let bomb of bombs) {
+            setTimeout(() => { // delay the coloring of bombs
+                let color = Math.floor(Math.random() * colors.length);
+                bomb.style.backgroundColor = colors[color];
+                bomb.style.color = "#ffffff";
+                bomb.style.paddingBottom = "15%";
+                if (grid.classList.contains("s-grid")) {
+                    bomb.style.fontSize = "300%";
+                }
+                else if (grid.classList.contains("m-grid")) {
+                    bomb.style.fontSize = "225%";
+                }
+                else {
+                    bomb.style.fontSize = "150%";
+                }
+                bomb.textContent = "❀";
+            }, delay);
+            delay += lag;
+        }
     }
     else {
         console.log("Game over. User lost.");
+        endgameText.textContent = "Game Over!"
 
         let bombs = document.querySelectorAll('.bomb');
         for (let bomb of bombs) {
@@ -543,11 +607,10 @@ function endGame(won) {
                 }
                 bomb.textContent = "●";
             }, delay);
-            delay += 50;
+            delay += lag;
         }
     }
     gameOver = true;
-    endgameText.textContent = "Game Over!"
     delay += 150; // take longer to display final popup 
 
     setTimeout(() => {
