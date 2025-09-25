@@ -68,13 +68,13 @@ h1 {
 }
 
 .m-grid {
-    grid-template-columns: repeat(15, 6.67%);
-    grid-template-rows: repeat(15, 6.67%);
+    grid-template-columns: repeat(13, 7.69%);
+    grid-template-rows: repeat(13, 7.69%);
 }
 
 .l-grid {
-    grid-template-columns: repeat(23, 4.35%);
-    grid-template-rows: repeat(23, 4.35%);
+    grid-template-columns: repeat(15, 6.67%);
+    grid-template-rows: repeat(15, 6.67%);
 }
 
 .box {
@@ -140,11 +140,17 @@ h1 {
     color: #ff8f00;
 }
 
-.six {}
+.six {
+    color: #e612ad;
+}
 
-.seven {}
+.seven {
+    color: #000d6e;
+}
 
-.eight {}
+.eight {
+    color: #bb0000;
+}
 
 #endgame-popup.hidden {
     display: none;

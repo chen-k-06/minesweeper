@@ -17,15 +17,20 @@ const playAgainButton = document.getElementById("play-again");
 const suppressClickAfterLongPress = new WeakSet();
 const longPressTimers = new Map();
 const SMALL = 10;
-const MED = 15;
-const LARGE = 23;
+const MED = 13;
+const LARGE = 15;
 const bombCounts = {
     SMALL: 18,
     MED: 40,
-    LARGE: 60
+    LARGE: 80
 }
 const colors = ["#FF6B81", "#FFD93D", "#40BFFF", "#7DFF6A", "#A566FF", "#FF914D"]; // bomb colors
 
+/**
+ * Initializes the game once the DOM is ready.
+ * - Generates the initial grid.
+ * - Adds global contextmenu handler for flagging with right-click/tap.
+ */
 document.addEventListener("DOMContentLoaded", function () {
     generateGrid(SMALL);
 
@@ -42,6 +47,11 @@ document.addEventListener("DOMContentLoaded", function () {
     );
 });
 
+/**
+ * Handles difficulty toggle changes.
+ * - Logs selection.
+ * - Maps value to grid size and regenerates the board.
+ */
 sizeToggle.addEventListener("change", function (event) {
     console.log("Selected difficulty:", event.target.value);
     let sideLength;
@@ -57,6 +67,15 @@ sizeToggle.addEventListener("change", function (event) {
     generateGrid(sideLength);
 });
 
+/**
+ * Generates a new grid of the given size.
+ * - Resets globals, updates UI, and builds tile elements.
+ * - Attaches handlers for digging, flagging, and long-press.
+ * - Ensures first click is safe and checks win/lose conditions.
+ *
+ * @param {number} SIDE_LENGTH - Number of tiles per row/column.
+ * @returns {void}
+ */
 function generateGrid(SIDE_LENGTH) {
     console.log(`Generating new grid of size ${SIDE_LENGTH}`);
 
@@ -408,12 +427,25 @@ function generateNumbers(SIDE_LENGTH) {
     });
 }
 
+/**
+ * Performs a bounded breadth-first search (BFS) to reveal safe tiles.
+ * Expands from the initial index up to a maximum number of tiles,
+ * checking only non-bomb, non-dug neighbors in four directions.
+ *
+ * @param {number} initial - Index of the starting tile.
+ * @param {number} SIDE_LENGTH - Number of tiles per grid side.
+ * @returns {void}
+ */
 function bfsSquares(inital, SIDE_LENGTH) {
     let revealed = 0;
-    let max = 25;
     let tiles = document.querySelectorAll(".box");
     let queue = [];
     queue.push(inital);
+
+    let max = 25;
+    if (SIDE_LENGTH != SMALL) {
+        max = 35;
+    }
 
     while (queue.length > 0 && revealed < max) {
         let index = queue.shift();
@@ -446,6 +478,15 @@ function bfsSquares(inital, SIDE_LENGTH) {
     }
 }
 
+/**
+ * Toggles a flag on the given tile.
+ * - Ignores tiles already dug.
+ * - Adds/removes a 🚩 marker and updates the flag count.
+ * - Triggers win-condition check and counter refresh.
+ *
+ * @param {HTMLElement} box - The tile element to flag/unflag.
+ * @returns {void}
+ */
 function handleFlagging(box) {
     if (box.classList.contains("dug")) {
         return;
@@ -468,10 +509,22 @@ function handleFlagging(box) {
     updateFlagCounter();
 }
 
+/**
+ * Updates the on-screen flag counter display.
+ *
+ * @returns {void}
+ */
 function updateFlagCounter() {
     flagCounter.textContent = `🚩 ${flagCount}`;
 }
 
+/**
+ * Handles Help button clicks by safely revealing a random unmarked tile.
+ * - Ensures the first move generates bombs safely.
+ * - Skips if the game is over or no safe tiles remain.
+ * - Reveals the tile and displays its number if present.
+ * - Ends the game if all win conditions are met.
+ */
 helpButton.addEventListener("click", () => {
     if (moveCount == 0) {
         generateBombs(gridSize, 0); // first click is always safe
@@ -544,9 +597,13 @@ function checkGameOver() {
 }
 
 /**
- * Handles game ending logic, including console logging and bomb reveals/coloring.
+ * Ends the game by revealing bombs with animations and showing the result popup.
  * 
- * @param {boolean} won - true if the user won the game, and false otherwise
+ * - Win: shows colorful ❀ symbols and "You won!" message.
+ * - Loss: shows shaded ● symbols and "Game Over!" message.
+ * - Bombs are revealed sequentially with a delay based on grid size.
+ *
+ * @param {boolean} won - True if the player won, false otherwise.
  * @returns {void}
  */
 function endGame(won) {
