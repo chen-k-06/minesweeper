@@ -7,3 +7,4 @@ The hint button will reveal an undug, unflagged square that does not contain a b
 
 Hex codes, colorway, and UI inspired by Google's Minesweeper game.
 
+## Try it yourself here: https://chen-k-06.github.io/minesweeper/
